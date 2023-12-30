@@ -19,39 +19,51 @@
 
                 <a class="return-link" href="/">Назад</a>
 
-                <div class="top">
+                <div class="left">
 
-                    <h1>{{ spare_name }}</h1>
+                    <img src="../media/{{ spare.image }}">
 
                 </div>
 
-                <div class="bottom">
+                <div class="right">
 
-                    <div class="left">
+                    <div class="details-container">
+                        <span class="name">Название: {{ spare.name }}</span>
 
-                        <img src="{% static 'images/' %}{{ spare_id }}{{ '.jpg' }}">
+                        <span class="description">Описание: {{ spare.description }}</span>
 
-                    </div>
+                        <span class="condition">Состояние: {{ spare.condition }}</span>
 
-                    <div class="right">
+                        <span class="price">Цена: {{ spare.price }}₽</span>
 
-                        <span class="description">{{ spare_description }}</span>
+                        <div class="rating-container">
 
-                        <span class="condition">Состояние: {{ spare_condition }}</span>
+                            <span class="rating">Рейтинг:</span>
 
-                        <span class="price">Цена: {{ spare_price }}₽</span>
+                            {% for i in spare.get_stars_count_fill %}
+                                <i class="fa fa-star fill"></i>
+                            {% endfor %}
 
-
-                        <div class="buttons-container">
-
-                            <button class="order-button">Заказать<i class="fa fa-shopping-cart"></i></button>
-
-                            <button  class="message-button">Написать сообщение<i class="fa fa-envelope"></i></button>
+                            {% for i in spare.get_stars_count_empty%}
+                                <i class="fa fa-star empty"></i>
+                            {% endfor %}
 
                         </div>
 
+                    </div>
+
+                    <div class="buttons-container">
+
+                        <a href="{{ spare.get_absolute_url }}">
+                            <button class="order-button">Заказать<i class="fa fa-shopping-cart"></i></button>
+                        </a>
+
+                        <a href="{{ spare.get_absolute_url }}">
+                            <button  class="message-button">Написать сообщение<i class="fa fa-envelope"></i></button>
+                        </a>
 
                     </div>
+
 
                 </div>
 

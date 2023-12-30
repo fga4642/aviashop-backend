@@ -1,30 +1,30 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
-from spares.utils.db import *
+from spares.models import *
 
 
 def index(request):
-    query = request.GET.get("spares")
-    spares = searchSpares(query) if query else getSpares()
+    query = request.GET.get("query")
+    spares = Spare.objects.filter(name__icontains=query).filter(status=1) if query else Spare.objects.filter(status=1)
 
     context = {
-        "spares": spares,
-        "search_query": query if query else ""
+        "search_query": query if query else "",
+        "spares": spares
     }
 
     return render(request, "home_page.html", context)
 
 
-def spareOrderPage(request, spare_id):
-    spare = getSpareById(spare_id)
-
+def spare_detail(request, spare_id):
     context = {
-        "username": "Админ",
-        "spare_id": spare_id,
-        "spare_name": spare["spare_name"],
-        "spare_description": spare["spare_description"],
-        "spare_price": spare["spare_price"],
-        "spare_condition": spare["spare_condition"]
+        "spare": Spare.objects.get(id=spare_id)
     }
 
     return render(request, "order_page.html", context)
+
+
+def delete(request, spare_id):
+    spare = Spare.objects.get(id=spare_id)
+    spare.delete()
+
+    return redirect("/")

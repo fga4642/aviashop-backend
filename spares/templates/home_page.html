@@ -23,7 +23,7 @@
 
                         {% csrf_token %}
 
-                        <input type="text" placeholder="Поиск" name="spares" value="{{ search_query }}">
+                        <input type="text" placeholder="Поиск" name="query" value="{{ search_query }}">
 
                         <button type="submit">
                           <i class="fa fa-search"></i>
@@ -37,27 +37,58 @@
 
                     {% for spare in spares %}
 
-                        <a href="spare/{{spare.spare_id}}" class="card-link-wrapper">
-
+                        <div class="card-wrapper">
                             <div class="card">
 
-                                <img src="{% static 'images/' %}{{ spare.spare_id }}{{ '.jpg' }}">
+                                <a href="{{ spare.get_delete_url }}">
+                                   <div class="delete-btn-wrapper">
+                                        <i class="fa fa-trash"></i>
+                                        <span>Удалить</span>
+                                    </div>
+                                </a>
+
+                                <div class="preview">
+                                    <img src="media/{{ spare.image }}">
+                                </div>
 
                                 <div class="card-content">
 
-                                    <h3 class="title">{{ spare.spare_name }}</h3>
+                                    <div class="content-top">
 
-                                    <span class="price">{{ spare.spare_price}}₽</span>
+                                        <h3 class="title">{{ spare.name }}</h3>
+
+                                        <div class="rating-wrapper">
+
+                                            {% for i in spare.get_stars_count_fill %}
+                                                <i class="fa fa-star fill"></i>
+                                            {% endfor %}
+
+                                            {% for i in spare.get_stars_count_empty%}
+                                                <i class="fa fa-star empty"></i>
+                                            {% endfor %}
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="content-bottom">
+
+                                        <span class="price">Цена: {{ spare.price}}₽</span>
+
+                                    </div>
 
                                 </div>
 
-                                <div class="order-link">
+                                <a href="{{spare.get_absolute_url}}" class="order-link">
                                     <span>Заказать</span>
-                                </div>
+                                </a>
+
 
                             </div>
 
-                        </a>
+                        </div>
+
+
 
                     {% endfor %}
 
