@@ -14,7 +14,6 @@ urlpatterns = [
 
     # Набор методов для заявок (Заказов)
     path('api/orders/search/', search_orders),  # GET
-    path('api/orders/draft/', get_draft_order),  # GET
     path('api/orders/<int:pk>/', get_order),  # GET
     path('api/orders/<int:pk>/update/', update_order),  # PUT
     path('api/orders/<int:pk>/update_delivery_date/', update_order_delivery_date),  # PUT
@@ -24,8 +23,8 @@ urlpatterns = [
     path('api/orders/<int:order_id>/delete_spare/<int:spare_id>/', delete_spare_from_order), # DELETE
 
     # Аутентификация
-    path("api/register/", register, name="register"),
-    path("api/login/", login, name="login"),
-    path("api/check/", check, name="check_access_token"),
-    path("api/logout/", logout, name="logout"),
+    path("api/register/", register),
+    path("api/login/", login),
+    path("api/check/", check),
+    path("api/logout/", logout),
 ]

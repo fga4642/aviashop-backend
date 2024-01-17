@@ -6,3 +6,4 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         Order.objects.all().delete()
         Spare.objects.all().delete()
+        CustomUser.objects.all().delete()

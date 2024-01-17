@@ -10,8 +10,20 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from .jwt_helper import create_access_token
+from .management.commands.utils import identity_user
 from .permissions import *
 from .serializer import *
+
+
+def get_draft_order(request):
+    user = identity_user(request)
+
+    if user is None:
+        return None
+
+    order = Order.objects.filter(owner_id=user.pk).filter(status=1).first()
+
+    return order
 
 
 @api_view(["GET"])
@@ -24,8 +36,10 @@ def search_spares(request):
 
     serializer = SpareSerializer(spares[offset:offset + limit], many=True)
 
+    draft_order = get_draft_order(request)
     data = {
         "spares": serializer.data,
+        "draft_order_id": draft_order.pk if draft_order else None,
         "totalCount": len(spares)
     }
 
@@ -95,40 +109,35 @@ def delete_spare(request, pk):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_spare_to_order(request, spare_id):
-    access_token = get_access_token(request)
-    payload = get_jwt_payload(access_token)
-    user_id = payload["user_id"]
+    if not Spare.objects.filter(pk=spare_id).exists():
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     spare = Spare.objects.get(pk=spare_id)
 
-    order = Order.objects.filter(status=1).filter(owner_id=user_id).last()
+    draft_order = get_draft_order(request)
+    user = identity_user(request)
 
-    if order is None:
-        order = Order.objects.create()
+    if draft_order is None:
+        draft_order = Order.objects.create()
+        draft_order.owner = user
+        draft_order.save()
 
-    if order.spares.contains(spare):
+    if draft_order.spares.contains(spare):
         return Response(status=status.HTTP_409_CONFLICT)
 
-    order.spares.add(spare)
-    order.owner = CustomUser.objects.get(pk=user_id)
-    order.save()
+    draft_order.spares.add(spare)
+    draft_order.owner = user
+    draft_order.save()
 
-    serializer = OrderSerializer(order, many=False)
+    serializer = OrderSerializer(draft_order)
 
-    response = Response()
-    response.data = serializer.data
-    response.status_code = status.HTTP_200_OK
-
-    return response
+    return Response(serializer.data, status.HTTP_200_OK)
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def search_orders(request):
-    token = get_access_token(request)
-    payload = get_jwt_payload(token)
-    user_id = payload["user_id"]
-    user = CustomUser.objects.get(pk=user_id)
+    user = identity_user(request)
 
     offset = int(request.GET.get("offset", 0))
     limit = int(request.GET.get("limit", 5))
@@ -139,16 +148,16 @@ def search_orders(request):
     orders = Order.objects.exclude(status__in=[1, 5])
 
     if not user.is_moderator:
-        orders = orders.filter(owner_id=user.pk)
+        orders = orders.filter(owner=user)
 
     if status > 0:
         orders = orders.filter(status=status)
 
-    if date_start and parse_datetime(date_start):
-        orders = orders.filter(date_of_formation__gt=parse_datetime(date_start))
+    if date_start:
+        orders = orders.filter(date_formation__gte=parse_datetime(date_start))
 
-    if date_end and parse_datetime(date_end):
-        orders = orders.filter(date_of_formation__lt=parse_datetime(date_end))
+    if date_end:
+        orders = orders.filter(date_formation__lte=parse_datetime(date_end))
 
     serializer = OrderSerializer(orders, many=True)
 
@@ -158,22 +167,6 @@ def search_orders(request):
     }
 
     return Response(resp)
-
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def get_draft_order(request):
-    token = get_access_token(request)
-    payload = get_jwt_payload(token)
-    user_id = payload["user_id"]
-
-    order = Order.objects.filter(owner_id=user_id).filter(status=1).first()
-
-    if order is None:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    serializer = OrderSerializer(order, many=False)
-    return Response(serializer.data)
 
 
 @api_view(["GET"])
@@ -237,7 +230,7 @@ def update_order_user(request, pk):
 
     order = Order.objects.get(pk=pk)
     order.status = 2
-    order.date_of_formation = timezone.now()
+    order.date_formation = timezone.now()
     order.save()
 
     calculate_order_delivery_date(order.pk)

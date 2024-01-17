@@ -30,6 +30,9 @@ def get_access_token(request):
     if token is None:
         token = request.headers.get("authorization")
 
+    if token == "undefined":
+        return None
+
     return token
 
 
