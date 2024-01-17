@@ -1,11 +1,11 @@
-###Бэкенд###
+### Бэкенд
 https://github.com/fga4642/aviashop-backend
 
-###Фронтенд###
+### Фронтенд
 https://github.com/fga4642/aviashop-frontend
 
-###Нативное приложение###
+### Нативное приложение
 https://github.com/fga4642/aviashop-native
 
-##Асинхронный сервис###
+### Асинхронный сервис
 https://github.com/fga4642/aviashop-remote
